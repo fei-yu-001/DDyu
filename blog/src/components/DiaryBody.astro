@@ -1,0 +1,11 @@
+---
+// 日记条目正文（不含日期/标题），供日记本书页拼装使用。
+interface Props {
+  entry: {
+    render: () => Promise<{ Content: any }>;
+  };
+}
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+---
+<Content />
