@@ -1,0 +1,33 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PostCard from "../components/PostCard.astro";
+
+const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+const description = "DDyu 的个人博客：工程、工具与日常记录。";
+---
+<BaseLayout title="DDyu" description={description}>
+  <section class="mb-12">
+    <h1 class="text-4xl font-bold tracking-tight sm:text-5xl">DDyu</h1>
+    <p class="mt-4 text-lg text-slate-600 dark:text-slate-400">工程、工具与日常记录。</p>
+    <div class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-base">
+      <a href="/studio/" class="font-medium underline underline-offset-4 hover:opacity-70">创意工坊 →</a>
+      <a href="/about/" class="underline underline-offset-4 hover:opacity-70">关于</a>
+      <a href="/rss.xml" class="underline underline-offset-4 hover:opacity-70">RSS</a>
+    </div>
+  </section>
+  <h2 class="mb-2 text-2xl font-bold">文章</h2>
+  {
+    posts.length > 0 ? (
+      <div class="divide-y divide-slate-200 dark:divide-slate-800">
+        {posts.map((post) => (
+          <PostCard post={post} />
+        ))}
+      </div>
+    ) : (
+      <p class="text-slate-500 dark:text-slate-400">还没有文章。</p>
+    )
+  }
+</BaseLayout>

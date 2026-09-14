@@ -1,0 +1,198 @@
+# ============================================================================
+# DDyu 个人站 —— 配置模板
+#
+# 使用方式：
+#   cp config.example.yaml config.yaml
+#   然后替换所有标注 [必须修改] 的字段。
+#
+# config.yaml 已被 .gitignore 排除，切勿提交到版本库。
+#
+# 标记说明：
+#   [必须修改]     首次启动前必须替换，否则服务拒绝启动或存在安全风险
+#   [按需修改]     仅在部署方式变化时调整
+#   [通常不要修改] 已采用推荐默认值
+# ============================================================================
+
+server:
+  # [通常不要修改] 仅监听本机，公网访问由 Nginx / Cloudflare Tunnel 反向代理进入。
+  # 若需局域网直连调试，可临时改为 "0.0.0.0:8000"，但公网部署务必保持回环地址。
+  listen: "127.0.0.1:8000"
+  # [通常不要修改] 单次请求体上限 32 MiB。
+  maxBodyBytes: 33554432
+  # [必须修改] 可信反向代理列表，仅填写真正位于本服务之前的代理地址。
+  # 留空时忽略所有转发头并记录直连对端 IP。
+  # 严禁填写 0.0.0.0/0 或 ::/0 —— 那会让任何人都能伪造 X-Forwarded-For 绕过风控与审计。
+  trustedProxies: ["127.0.0.1"]
+  # [通常不要修改] 仅限制客户端上传完整请求体的时间，不限制推理与流式响应。
+  readTimeout: 15m
+  # [通常不要修改] 管理 API 与非流式请求的最长生命周期。
+  requestTimeout: 2h
+  # [必须保持 false] 公网部署必须关闭，否则接口结构对全网公开。
+  swaggerEnabled: false
+
+auth:
+  # [通常不要修改] 管理端访问令牌与刷新令牌有效期。
+  accessTokenTTL: 15m
+  refreshTokenTTL: 720h
+  # [按协议设置] 会话 Cookie 是否带 Secure 标记，必须与访问协议一致：
+  #   公网 HTTPS（deploy/ 的 Nginx 或 Cloudflare Tunnel）→ 必须 true，否则 Cookie 可被明文截获；
+  #   本地纯 HTTP 调试（listen 为 127.0.0.1，浏览器直接访问 http://…）→ 必须 false，
+  #   否则 Safari / 旧内核 / 经主机名或局域网地址访问会丢弃 Cookie，
+  #   表现为「登录看似成功、一刷新就掉回登录页」。
+  secureCookies: true
+
+secrets:
+  # [必须修改] 至少 32 字符的强随机串。生成：openssl rand -hex 32
+  # 仅用于签发管理员会话；更换只会让已登录会话失效，不影响账号凭据。
+  jwtSecret: "replace-with-at-least-32-random-characters"
+
+  # [必须修改] Base64 编码的 32 字节密钥。生成：openssl rand -base64 32
+  # ⚠️ 下面是一个「合法但不安全」的全零占位值，必须以自己的随机密钥替换！
+  # ⚠️ 一旦账号写入数据库，此密钥绝不可更换 —— 更换会导致全部账号凭据无法解密。
+  # ⚠️ 迁移时必须连同 data/backend.db 一起搬运，并长期单独备份。
+  credentialEncryptionKey: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+
+bootstrapAdmin:
+  # [必须修改] 仅在数据库中还没有管理员时生效。
+  # 管理员创建成功后，建议删除本段并重启，避免明文密码长期留在磁盘上。
+  username: "replace-admin-username"
+  password: "replace-with-a-strong-admin-password"
+
+frontend:
+  # [通常不要修改] Go 服务同源托管的前端构建目录（创意工坊产物）。
+  staticPath: "./frontend/dist"
+  # [通常不要修改] 博客静态构建产物目录，挂在根路径 /；
+  # 目录不存在或无 index.html 时根路径显示占位页，不影响 /studio。
+  blogStaticPath: "./static/blog"
+  # [按需修改] 生成公开资源地址（媒体链接、接口文档示例）时使用的前缀。
+  # 留空表示使用相对路径 —— 推荐，这样更换域名无需改动任何代码或配置。
+  publicApiBaseURL: ""
+
+database:
+  # [通常不要修改] 单实例使用 sqlite；多实例才改为 postgres。
+  driver: sqlite # sqlite | postgres
+  sqlite:
+    # [通常不要修改] 相对路径以配置文件所在目录为基准。
+    path: "./data/backend.db"
+  postgres:
+    # [必须修改：仅 driver=postgres] 填写真实 DSN。
+    dsn: "postgres://user:password@127.0.0.1:5432/ddyu?sslmode=disable"
+    maxOpenConns: 50
+    maxIdleConns: 10
+
+runtimeStore:
+  # [通常不要修改] 单实例使用 memory 即可，无需引入 Redis。
+  driver: memory # memory | redis
+  redis:
+    # [必须修改：仅 driver=redis] 填写 Redis 连接信息。
+    address: "127.0.0.1:6379"
+    username: ""
+    password: ""
+    database: 0
+    keyPrefix: "ddyu:"
+    tls: false
+
+deployment:
+  # [通常不要修改] 单实例保持 1；多实例必须同时使用 PostgreSQL、Redis 与共享媒体目录。
+  replicas: 1
+  instanceID: ""
+  clusterID: "ddyu"
+  sharedMedia: false
+
+media:
+  # [通常不要修改] 当前仅支持 local。
+  driver: local
+  local:
+    # [按需修改] 作品与临时输入的落盘目录；数据库只保存元数据。
+    # 公网长期运行建议指向容量更大的数据盘。
+    path: "./data/media"
+
+routing:
+  # [通常不要修改] 服务端推理回放缓存，仅服务于 Grok Build 多轮对话。
+  reasoningReplayEnabled: false
+  reasoningReplayTTL: 1h
+  reasoningReplayMaxEntries: 2048
+  # [通常不要修改] 单机小号池无需按账号隔离连接池。
+  accountIsolatedConnections: false
+  # [通常不要修改] 分段选号仅在候选账号数达到阈值时才生效，小号池保持关闭。
+  segmentedSelectorEnabled: false
+  segmentedSelectorMinCandidates: 3000
+  segmentedSelectorWindowSize: 64
+  # [通常不要修改] 大号池保护参数，单机小号池保持 0。
+  autoAssignMaxNodeShare: 0
+  autoAssignMaxMigrationShare: 0
+
+audit:
+  # [通常不要修改] 审计批量写入参数；bufferSize 的修改需重启生效。
+  # 审计服务与客户端计费结算绑定，不可移除。
+  bufferSize: 16384
+  batchSize: 256
+  flushInterval: 250ms
+  commitDelay: 5ms
+  # [按需修改] 自动清理超过该天数的请求审计；0 表示永久保留。
+  retentionDays: 7
+  # [通常不要修改] enforce 会在账本异常超过宽限期后暂停新推理，保护计费准确性。
+  ledgerMode: enforce # observe | enforce
+  ledgerFailureThreshold: 1
+  ledgerUnhealthyGrace: 10s
+  ledgerQueueHighWatermarkPercent: 90
+
+# ============================================================================
+# 出口质量守护：防降智核心。
+#
+# 这是保护账号池不被烧毁的关键机制 —— 上游对部分请求会跳过推理直接吐答案，
+# 若不拦截，这些请求会被记为 missing_thinking 并让账号进入冷却；
+# 冷却期内再次命中会导致账号被永久禁用。
+#
+# 本部署只使用「进程内 requestRetry」，不需要额外运行 Python sidecar：
+#   enabled: true + mode: passive 即可，不产生任何主动探测流量。
+#
+# 以下 requestRetry 参数为实测校准值，改动前请先阅读测试记录。
+# ============================================================================
+qualityGuard:
+  enabled: true
+  # [必须保持 passive] passive 表示不做主动探测；active/hybrid 需要额外 sidecar。
+  mode: passive
+  model: "grok-4.6"
+  activeInterval: 30m
+  passivePollInterval: 5s
+  softTPS: 500
+  hardTPS: 1000
+  consecutiveSoft: 2
+  consecutiveErrors: 2
+  quarantineDuration: 5m
+  noAccountBackoff: 5m
+  # [必须保持 1] 本部署没有 sidecar 参与节点执法。
+  minimumHealthyNodes: 1
+  maxOutputTokens: 384
+  failClosed: false
+  minimumGenerationWindow: 1s
+  rotationURL: ""
+  rotationToken: ""
+  rotationTimeout: 45s
+  nodeIDs: []
+  rotatableNodeIDs: []
+
+  # 缺失推理证据时扣住响应并更换账号重试。
+  requestRetry:
+    enabled: true
+    # 实测 4 次即可覆盖绝大多数降智场景，且 fail_open 下恢复更快。
+    maxAttempts: 4
+    holdTimeout: 12s
+    minOutputTokens: 8
+    # fail_open：重试用尽时放行最后一枪正文（可用性优先，不返回 503）。
+    # 降智账号仍会被 accountCooldown 隔离，可用池会逐步纯化为好号。
+    onExhausted: fail_open # fail_open | fail_closed
+    # ⚠️ 不要调小 accountCooldown：冷却期反而在保护账号。
+    # 「冷却已过期 + 仍带 missing_thinking 标记」的账号，再误判一次就会被永久禁用。
+    accountCooldown: 12h
+    # 空流/空闲超时惩罚，与 accountCooldown 独立。
+    idleAccountCooldown: 15m
+    minEncryptedBytes: 256
+    # 实测「密文字节 / 推理 token」比值分布为 3.73–6.09，阈值 4 正好压在分布下沿，
+    # 会让大量正常回答被误判为缺思考。取 2 留出余量；真正的空壳 stub 仍被
+    # minEncryptedBytes=256 拦下。
+    encryptedBytesPerReasoningToken: 2
+    # 让达到密文门槛的 encrypted_content 计为思考证据，对齐 Chat 路径。
+    # 否则原生 /v1/responses 透传路径没有协议转换器，会 100% 误判。
+    treatEncryptedAsThinking: true

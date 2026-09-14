@@ -1,0 +1,50 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import TOC from "../../components/TOC.astro";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog", ({ data }) => !data.draft);
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+const published = post.data.date.toISOString().slice(0, 10);
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: post.data.title,
+  description: post.data.description,
+  datePublished: post.data.date.toISOString(),
+  author: { "@type": "Person", name: "DDyu" },
+  tags: post.data.tags,
+};
+---
+<BaseLayout
+  title={`${post.data.title} · DDyu`}
+  description={post.data.description}
+  type="article"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  <article>
+    <header class="mb-6">
+      <h1 class="text-3xl font-bold tracking-tight">{post.data.title}</h1>
+      <div class="mt-2 flex flex-wrap items-center gap-x-3 text-sm text-slate-500 dark:text-slate-400">
+        <time datetime={post.data.date.toISOString()}>{published}</time>
+        {post.data.tags.map((tag) => (
+          <a href={`/tag/${tag}/`} class="hover:text-slate-800 dark:hover:text-slate-200">
+            #{tag}
+          </a>
+        ))}
+      </div>
+    </header>
+    <TOC />
+    <div class="prose prose-slate max-w-none dark:prose-invert">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>

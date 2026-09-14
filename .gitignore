@@ -1,0 +1,84 @@
+# ============================================================
+# DDyu 个人站 —— 敏感文件隔离清单
+# 本项目会公开推送到 GitHub，以下任何一项都不得入库。
+# ============================================================
+
+# 运行配置（含 JWT 密钥与凭据加密密钥，泄露等于账号池报废）
+/config.yaml
+/config.local.yaml
+/config.*.local.yaml
+*.env
+.env
+.env.*
+!.env.example
+
+# 运行时数据：SQLite 库（含加密后的账号凭据）、媒体作品
+/data/
+/backend/data/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# 本地媒体与归档
+/media/
+/static/private/
+/static/blog/
+/backups/
+*.tgz
+*.zip
+
+# 部署机密
+/deploy/cloudflared/*.json
+/deploy/cloudflared/cert.pem
+/deploy/secrets/
+*.pem
+*.key
+
+# 日志
+*.log
+/logs/
+
+# Go
+/.gocache/
+/.gocache-*/
+/backend/grok2api
+/backend/ddyu-site
+/ddyu-site
+/backend/coverage.out
+*.coverprofile
+*.test
+
+# Node / 前端
+/node_modules/
+/frontend/node_modules/
+/blog/node_modules/
+/frontend/dist/
+/frontend/.cache/
+/frontend/*.tsbuildinfo
+/.pnpm-store/
+
+# Python（构建/工具脚本）
+__pycache__/
+*.py[cod]
+
+# 构建产物
+/dist/
+/release/
+/.tmp/
+/tmp/
+
+# 操作系统与编辑器
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 抓包与诊断（可能含凭据）
+*.har
+*.pcap
+*.pcapng

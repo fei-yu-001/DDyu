@@ -1,0 +1,91 @@
+name: grok2api
+
+# Lab 默认：qualityGuard + requestRetry 已开（密文 floor / burst / 假加密 dump / 明文倒灌比 / hold 30s），sidecar 随 `up -d` 启动。
+# 不要 pull ghcr.io/chenyme/grok2api:latest（官方默认不拦截）。首次请 --build。
+# 首次：./scripts/bootstrap-lab-config.sh 或 cp config.example.yaml config.yaml ，改 secrets 和 bootstrapAdmin。
+
+services:
+  grok2api:
+    container_name: grok2api
+    image: "${GROK2API_IMAGE:-ghcr.io/lij768423-svg/grok2api:v3.1.8-lab}"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${GROK2API_PORT:-8000}:8000"
+    environment:
+      TZ: "${TZ:-Asia/Shanghai}"
+      GROK2API_DATABASE_URL: "${GROK2API_DATABASE_URL:-}"
+      GROK2API_QUALITY_GUARD_DIR: /var/lib/grok2api-quality-guard
+    volumes:
+      - "${GROK2API_CONFIG:-./config.yaml}:/run/grok2api/config.yaml:ro"
+      - grok2api-data:/app/data
+      - quality_guard_state:/var/lib/grok2api-quality-guard
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8000/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 20s
+
+  # ================================ WARP ================================
+  # 如果出口 IP 不干净，可取消以下注释使用 WARP 作为落地代理。
+  # 启用后，在管理端“设置 -> 出口代理”中新增 socks5://warp:1080。
+
+  # warp:
+  #   container_name: warp
+  #   image: caomingjun/warp:latest
+  #   profiles: ["warp"]
+  #   restart: unless-stopped
+  #   ports:
+  #     - "127.0.0.1:1080:1080"
+  #   environment:
+  #     - WARP_SLEEP=2
+  #   cap_add:
+  #     - NET_ADMIN
+
+  # ================================ FLARESOLVERR ================================
+  # 在管理端将 Clearance 模式设为 FlareSolverr 或按需刷新，并使用 http://flaresolverr:8191。
+  # 启动命令：docker compose --profile flaresolverr up -d
+
+  # flaresolverr:
+  #   container_name: flaresolverr
+  #   image: ghcr.io/flaresolverr/flaresolverr:latest
+  #   profiles: ["flaresolverr"]
+  #   environment:
+  #     TZ: Asia/Shanghai
+  #     LOG_LEVEL: info
+  #   restart: unless-stopped
+
+  # 出口质量守护：默认随主服务启动（passive，不额外烧 token）。
+  egress-quality-guard:
+    container_name: grok2api-egress-quality-guard
+    image: "${GROK2API_QG_IMAGE:-ghcr.io/lij768423-svg/grok2api-quality-guard:v3.1.8-lab}"
+    build:
+      context: .
+      dockerfile: tools/egress-quality-guard/Dockerfile
+    environment:
+      GROK2API_BASE_URL: ${GROK2API_BASE_URL:-http://grok2api:8000}
+      QUALITY_GUARD_MODE: ${QUALITY_GUARD_MODE:-passive}
+      QUALITY_GUARD_MODEL: ${QUALITY_GUARD_MODEL:-grok-4.6}
+      QUALITY_GUARD_FAIL_CLOSED: "${QUALITY_GUARD_FAIL_CLOSED:-false}"
+      QUALITY_GUARD_MIN_HEALTHY_NODES: "${QUALITY_GUARD_MIN_HEALTHY_NODES:-1}"
+    depends_on:
+      grok2api:
+        condition: service_healthy
+    volumes:
+      - quality_guard_state:/var/lib/grok2api-quality-guard
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  grok2api-data:
+  quality_guard_state:

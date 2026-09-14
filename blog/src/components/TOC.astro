@@ -1,0 +1,33 @@
+---
+// 目录：页面渲染后扫描文章内的 h2/h3 生成锚点链接（客户端完成，不引入额外依赖）。
+---
+<nav
+  id="toc"
+  aria-label="目录"
+  class="my-6 hidden rounded-lg border border-slate-200 bg-slate-100/60 p-4 dark:border-slate-800 dark:bg-slate-900/60"
+>
+  <p class="mb-2 text-sm font-semibold">目录</p>
+  <ul id="toc-list" class="space-y-1.5 text-sm text-slate-600 dark:text-slate-400"></ul>
+</nav>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const article = document.querySelector("article");
+    const nav = document.getElementById("toc");
+    const list = document.getElementById("toc-list");
+    if (!article || !nav || !list) return;
+    const headings = Array.from(article.querySelectorAll("h2, h3"));
+    if (headings.length === 0) return;
+    headings.forEach((el, i) => {
+      if (!el.id) el.id = "h-" + i;
+      const item = document.createElement("li");
+      const link = document.createElement("a");
+      link.href = "#" + el.id;
+      link.textContent = el.textContent;
+      link.className = "hover:underline";
+      if (el.tagName === "H3") item.className = "pl-4";
+      item.appendChild(link);
+      list.appendChild(item);
+    });
+    nav.hidden = false;
+  });
+</script>

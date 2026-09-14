@@ -1,0 +1,13 @@
+---
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+---
+<article class="border-t border-slate-200 pt-8 dark:border-slate-800">
+  <time datetime={entry.data.date.toISOString()} class="text-sm tracking-wide text-slate-500 dark:text-slate-400">
+    {entry.data.date.toISOString().slice(0, 10)}
+  </time>
+  <h2 class="mt-1 text-2xl font-semibold">{entry.data.title}</h2>
+  <div class="mt-4 space-y-4 text-base leading-8 text-slate-700 dark:text-slate-300">
+    <Content />
+  </div>
+</article>

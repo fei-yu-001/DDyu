@@ -1,0 +1,35 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* 深色模式走 .dark 类（手动切换优先，默认跟随系统）。 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light dark;
+}
+
+/* 全站壁纸背景：仅浅色主题；叠一层浅色半透明罩保证文字可读；深色主题回退纯色。
+   --bg-veil 为罩浓度（1 - 明显度/100），与创意工坊共用同一 localStorage 值。 */
+body {
+  background-image:
+    linear-gradient(rgba(248, 250, 252, var(--bg-veil, 0.3)), rgba(248, 250, 252, var(--bg-veil, 0.3))),
+    url("/bg-interior.jpg");
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+  background-attachment: fixed, fixed;
+}
+.dark body {
+  background-image: none;
+}
+
+/* Shiki 代码块：浅色由 Shiki 内联样式直接写入；深色用 .dark 类覆盖（内联样式需 !important）。 */
+.astro-code {
+  border-radius: 0.5rem;
+}
+.dark .astro-code {
+  background-color: var(--shiki-dark-bg) !important;
+}
+.dark .astro-code span {
+  color: var(--shiki-dark, #e1e4e8) !important;
+}

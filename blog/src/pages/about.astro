@@ -1,0 +1,22 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const description = "关于本站：博客在根路径，创意工坊在 /studio。";
+---
+<BaseLayout title="关于 · DDyu" description={description}>
+  <h1 class="mb-4 text-2xl font-bold">关于</h1>
+  <div class="space-y-3 text-slate-600 dark:text-slate-400">
+    <p>这里是 DDyu 的个人站点，由两部分组成：</p>
+    <ul class="list-disc space-y-1 pl-5">
+      <li>
+        <a href="/" class="underline">首页</a>：博客，文章用 Markdown 写作，静态发布。
+      </li>
+      <li>
+        <a href="/studio/" class="underline">创意工坊</a>：AI 创作工坊，支持对话、生图与图编。
+      </li>
+    </ul>
+    <p>
+      可通过 <a href="/rss.xml" class="underline">RSS</a> 订阅更新。
+    </p>
+  </div>
+</BaseLayout>

@@ -1,0 +1,27 @@
+---
+interface Props {
+  post: CollectionEntry<"blog">;
+}
+
+const { post } = Astro.props;
+const date = post.data.date.toISOString().slice(0, 10);
+const href = `/post/${post.slug}/`;
+---
+<div class="group relative block py-8">
+  <!-- 拉伸链接：整卡可点；标题与标签链接用 relative 抬到它之上保持独立可点 -->
+  <a href={href} aria-hidden="true" tabindex="-1" class="absolute inset-0"></a>
+  <div class="mb-1 flex flex-wrap items-center gap-x-3 text-sm text-slate-500 dark:text-slate-400">
+    <time datetime={post.data.date.toISOString()}>{date}</time>
+    {post.data.tags.map((tag) => (
+      <a href={`/tag/${tag}/`} class="relative hover:text-slate-800 dark:hover:text-slate-200">
+        #{tag}
+      </a>
+    ))}
+  </div>
+  <h2 class="text-2xl font-semibold">
+    <a href={href} class="relative group-hover:underline">{post.data.title}</a>
+  </h2>
+  {post.data.description && (
+    <p class="mt-2 text-slate-600 dark:text-slate-400">{post.data.description}</p>
+  )}
+</div>

@@ -1,0 +1,4 @@
+# pnpm 11+ 构建脚本审批：允许这些依赖执行 postinstall（esbuild 平台二进制 / sharp 原生模块）。
+allowBuilds:
+  esbuild: true
+  sharp: true

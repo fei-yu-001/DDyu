@@ -1,0 +1,27 @@
+# Cloudflare Tunnel 配置（推荐方案：免公网 IP、自动 HTTPS）
+#
+# 前提：
+#   1) 域名 ddyu.online 已在 Cloudflare 托管；
+#   2) 已执行 cloudflared tunnel login && cloudflared tunnel create ddyu-site；
+#   3) 把下面两处 REPLACE_ 占位换成真实的 tunnel UUID 与凭证文件名。
+#
+# ⚠️ 重要边界：Tunnel 只负责**入站**。号池的出站流量仍然必须走本机 Resin
+#    （127.0.0.1:2260），"账号 ↔ 固定出口 IP" 是整个号池的基石，不能被 CF 接管。
+
+tunnel: REPLACE_WITH_TUNNEL_UUID
+credentials-file: /etc/cloudflared/REPLACE_WITH_TUNNEL_UUID.json
+
+# 本地管理端点（可选，用于查看 tunnel 指标）
+metrics: 127.0.0.1:49312
+
+originRequest:
+  connectTimeout: 30s
+  # 上游是流式（SSE）接口，交给来源站自行控制分块
+  disableChunkedEncoding: true
+  tcpKeepAlive: 30s
+
+ingress:
+  - hostname: ddyu.online
+    service: http://127.0.0.1:8000
+  # 站点用 /studio 承载创意工坊、/ 为首页占位页，两者同源，无需额外路径规则
+  - service: http_status:404

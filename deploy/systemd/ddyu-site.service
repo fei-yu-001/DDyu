@@ -1,0 +1,43 @@
+[Unit]
+Description=DDyu 个人站（grok2api 裁剪版：对话/生图/图编）
+Documentation=file:///opt/ddyu/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ddyu
+Group=ddyu
+WorkingDirectory=/opt/ddyu
+
+# ⚠️ 必须注入：qualityGuard 启用时缺少该变量会直接启动失败
+#    （internal/infra/qualityguard/bootstrap.go：「qualityGuard 已启用，但未配置内部 bootstrap 文件路径」）
+Environment=GROK2API_QUALITY_GUARD_DIR=/var/lib/ddyu/quality-guard
+# 与号池规模匹配的并发度；同时避免与同机跑模型的进程抢核
+Environment=GOMAXPROCS=4
+
+ExecStart=/opt/ddyu/ddyu-site --config /opt/ddyu/config.yaml
+
+Restart=always
+RestartSec=5s
+# 出口稳定性依赖本机 Resin（127.0.0.1:2260）先就绪，因此允许重试
+StartLimitIntervalSec=0
+
+# 绑核：把站点固定在 2-7 号核（0-1 留给 Resin/系统），具体按机器核数调整
+CPUAffinity=2-7
+LimitNOFILE=65535
+
+# 安全基线：只允许写 data/ 与质量守护目录
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+RestrictSUIDSGID=true
+ReadWritePaths=/opt/ddyu/data /var/lib/ddyu
+
+StandardOutput=append:/var/log/ddyu/site.log
+StandardError=append:/var/log/ddyu/site.err.log
+
+[Install]
+WantedBy=multi-user.target
