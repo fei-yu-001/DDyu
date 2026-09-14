@@ -64,7 +64,7 @@ const entries = (await getCollection("diary")).sort(
 
   <!-- 日记本数据源：服务端渲染，客户端组装成书本 -->
   <template id="diary-data">
-    <div class="db-entry" data-kind="prologue">
+    <div class="db-entry" data-kind="prologue" data-date="2026-09-13" data-emoji="💌">
       <div class="db-left">
         <span class="db-emoji">💌</span>
         <span class="db-date">2026-09-13</span>
@@ -127,9 +127,15 @@ const entries = (await getCollection("diary")).sort(
       backdrop-filter: blur(8px);
     }
 
+    .db-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
     .db-book {
       position: relative;
-      width: min(92vw, 1000px);
+      width: min(calc(100vw - 140px), 1000px);
       aspect-ratio: 16 / 10.5;
       perspective: 2400px;
       transform: scale(0.96);
@@ -156,10 +162,18 @@ const entries = (await getCollection("diary")).sort(
     .db-page {
       position: relative;
       padding: clamp(16px, 2.8vw, 34px);
-      overflow-y: auto;
+      overflow: hidden;
       background: #faf5ea;
       color: #403a31;
-      scrollbar-width: thin;
+    }
+
+    .db-measure {
+      position: absolute;
+      visibility: hidden;
+      pointer-events: none;
+      overflow: visible;
+      top: 0;
+      left: 0;
     }
 
     .dark .db-page {
@@ -185,25 +199,18 @@ const entries = (await getCollection("diary")).sort(
       background-image: linear-gradient(to right, rgba(0, 0, 0, 0.5), transparent 12%);
     }
 
-    .db-page::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .db-page::-webkit-scrollbar-thumb {
-      background: rgba(120, 90, 40, 0.3);
-      border-radius: 3px;
-    }
-
     .db-page h2 {
-      font-family: Georgia, "Noto Serif SC", "Songti SC", STSong, SimSun, serif;
+      font-family:
+        system-ui, -apple-system, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
       font-size: clamp(20px, 2.6vw, 30px);
-      font-weight: 700;
+      font-weight: 800;
       line-height: 1.35;
       margin: 0 0 14px;
     }
 
     .db-page h3 {
-      font-family: Georgia, "Noto Serif SC", "Songti SC", STSong, SimSun, serif;
+      font-family:
+        system-ui, -apple-system, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
       font-size: clamp(15px, 1.8vw, 18px);
       font-weight: 700;
       margin: 20px 0 6px;
@@ -226,7 +233,8 @@ const entries = (await getCollection("diary")).sort(
     }
 
     .db-page blockquote p {
-      font-family: Georgia, "Noto Serif SC", "Songti SC", STSong, SimSun, serif;
+      font-family:
+        system-ui, -apple-system, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
       font-size: clamp(15px, 1.8vw, 18px);
       font-weight: 600;
       margin: 0;
@@ -247,13 +255,23 @@ const entries = (await getCollection("diary")).sort(
     }
 
     .db-date {
-      font-family: Georgia, "Noto Serif SC", "Songti SC", STSong, SimSun, serif;
+      font-family: ui-monospace, "Cascadia Code", "JetBrains Mono", Consolas, "Courier New", monospace;
       font-size: clamp(18px, 2.4vw, 27px);
       font-weight: 700;
       letter-spacing: 0.05em;
     }
 
+    .db-date-sm {
+      font-size: clamp(13px, 1.6vw, 16px);
+      opacity: 0.85;
+    }
+
+    .db-emoji-sm {
+      font-size: clamp(24px, 3.2vw, 36px);
+    }
+
     .db-kicker {
+      font-family: ui-monospace, "Cascadia Code", "JetBrains Mono", Consolas, "Courier New", monospace;
       font-size: 12px;
       letter-spacing: 0.3em;
       opacity: 0.6;
@@ -279,7 +297,7 @@ const entries = (await getCollection("diary")).sort(
       text-align: center;
       font-size: 11px;
       opacity: 0.55;
-      font-family: Georgia, "Noto Serif SC", "Songti SC", STSong, SimSun, serif;
+      font-family: ui-monospace, "Cascadia Code", "JetBrains Mono", Consolas, "Courier New", monospace;
     }
 
     .db-cover {
@@ -297,6 +315,7 @@ const entries = (await getCollection("diary")).sort(
     .db-cover.open {
       transform: rotateY(-180deg);
       opacity: 0;
+      pointer-events: none;
       transition-delay: 0s, 0.35s;
     }
 
@@ -354,18 +373,37 @@ const entries = (await getCollection("diary")).sort(
       letter-spacing: 0.14em;
     }
 
-    .db-cover-avatars {
+    .db-cover-duo {
+      position: relative;
       display: flex;
-      gap: 12px;
+      width: clamp(110px, 13vw, 160px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 3px solid rgba(246, 234, 214, 0.85);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+      overflow: hidden;
     }
 
-    .db-cover-avatars img {
-      width: clamp(40px, 5vw, 56px);
-      aspect-ratio: 1;
+    .db-cover-half {
+      width: 50%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .db-cover-half img {
+      width: 100%;
+      height: 100%;
       object-fit: cover;
-      border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.75);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    }
+
+    .db-cover-heart {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: clamp(18px, 2.2vw, 26px);
+      color: #f6ead6;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.65);
     }
 
     .db-cover-hint {
@@ -391,12 +429,12 @@ const entries = (await getCollection("diary")).sort(
     }
 
     .db-flipper.db-fwd {
-      transition: transform 0.8s cubic-bezier(0.4, 0.1, 0.3, 1);
+      transition: transform 0.85s cubic-bezier(0.45, 0.05, 0.25, 1);
       transform: rotateY(-180deg);
     }
 
     .db-flipper.db-bwd {
-      transition: transform 0.8s cubic-bezier(0.4, 0.1, 0.3, 1);
+      transition: transform 0.85s cubic-bezier(0.45, 0.05, 0.25, 1);
       transform: rotateY(0deg);
     }
 
@@ -407,14 +445,34 @@ const entries = (await getCollection("diary")).sort(
       -webkit-backface-visibility: hidden;
     }
 
-    .db-flipper .db-fp-back {
-      transform: rotateY(180deg);
+    .db-flipper .db-fp::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to right, rgba(0, 0, 0, 0.3), transparent 45%);
+      opacity: 0;
+      pointer-events: none;
     }
 
-    .db-nav {
-      display: flex;
-      align-items: center;
-      gap: 16px;
+    .db-flipper.db-fwd .db-fp::after,
+    .db-flipper.db-bwd .db-fp::after {
+      animation: db-curl 0.85s ease-in-out;
+    }
+
+    @keyframes db-curl {
+      0% {
+        opacity: 0;
+      }
+      45% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+      }
+    }
+
+    .db-flipper .db-fp-back {
+      transform: rotateY(180deg);
     }
 
     .db-prev,
@@ -428,12 +486,15 @@ const entries = (await getCollection("diary")).sort(
       font-size: 24px;
       line-height: 1;
       cursor: pointer;
-      transition: background 0.2s;
+      transition:
+        background 0.2s,
+        transform 0.2s;
     }
 
     .db-prev:hover:not(:disabled),
     .db-next:hover:not(:disabled) {
       background: rgba(255, 255, 255, 0.22);
+      transform: scale(1.1);
     }
 
     .db-prev:disabled,
@@ -452,6 +513,7 @@ const entries = (await getCollection("diary")).sort(
 
     .db-close {
       position: absolute;
+      z-index: 10;
       top: 18px;
       right: 20px;
       width: 40px;
@@ -471,17 +533,19 @@ const entries = (await getCollection("diary")).sort(
 
     @media (max-width: 640px) {
       .db-book {
+        width: min(calc(100vw - 100px), 1000px);
         aspect-ratio: 16 / 12;
       }
 
-      .db-nav {
-        gap: 10px;
+      .db-row {
+        gap: 8px;
       }
 
       .db-prev,
       .db-next {
-        width: 40px;
-        height: 40px;
+        width: 38px;
+        height: 38px;
+        font-size: 20px;
       }
     }
   </style>
