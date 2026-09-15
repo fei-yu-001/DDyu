@@ -8,7 +8,7 @@ import DiaryBody from "../../components/DiaryBody.astro";
 export const sitemap = { include: false };
 
 const entries = (await getCollection("diary")).sort(
-  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+  (a, b) => a.data.date.valueOf() - b.data.date.valueOf(),
 );
 ---
 <BaseLayout title="我们的故事 · DDyu" description="我们的日记。每次分开时，写下一天经历所得。">
@@ -324,17 +324,17 @@ const entries = (await getCollection("diary")).sort(
       inset: 0;
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #8a5633, #6b4226 55%, #54331d);
+      border-radius: 18px;
+      background: linear-gradient(150deg, #fffaf2 0%, #ffedd9 52%, #ffddb9 100%);
       box-shadow:
-        0 22px 60px rgba(0, 0, 0, 0.5),
-        inset 0 0 70px rgba(0, 0, 0, 0.35);
+        0 24px 64px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: clamp(8px, 1.4vw, 16px);
-      color: #f6ead6;
+      gap: clamp(10px, 1.6vw, 18px);
+      color: #3f2d1e;
       padding: 24px;
     }
 
@@ -343,10 +343,10 @@ const entries = (await getCollection("diary")).sort(
       position: absolute;
       top: 0;
       bottom: 0;
-      left: 12px;
+      left: 14px;
       width: 2px;
       border-radius: 2px;
-      background: rgba(0, 0, 0, 0.35);
+      background: rgba(122, 78, 46, 0.18);
     }
 
     .db-cover-face::after {
@@ -357,43 +357,53 @@ const entries = (await getCollection("diary")).sort(
       right: 4px;
       width: 7px;
       border-radius: 2px;
-      background: repeating-linear-gradient(to bottom, #f3ead9 0 2px, #d9cdb4 2px 3px);
+      background: repeating-linear-gradient(to bottom, #fffdf8 0 2px, #f0e2cd 2px 3px);
     }
 
     .db-cover-kicker {
+      font-family: ui-monospace, "Cascadia Code", "JetBrains Mono", Consolas, "Courier New", monospace;
       font-size: clamp(11px, 1.3vw, 13px);
       letter-spacing: 0.4em;
-      opacity: 0.75;
+      color: #9a6a45;
     }
 
     .db-cover-title {
-      font-family: Georgia, "Noto Serif SC", "Songti SC", STSong, SimSun, serif;
+      font-family:
+        system-ui, -apple-system, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
       font-size: clamp(28px, 4.4vw, 46px);
-      font-weight: 700;
-      letter-spacing: 0.14em;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      color: #3f2d1e;
     }
 
     .db-cover-duo {
       position: relative;
       display: flex;
-      width: clamp(110px, 13vw, 160px);
+      align-items: center;
+    }
+
+    .db-cover-avatar {
+      width: clamp(64px, 8vw, 96px);
       aspect-ratio: 1;
       border-radius: 50%;
-      border: 3px solid rgba(246, 234, 214, 0.85);
-      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
-      overflow: hidden;
-    }
-
-    .db-cover-half {
-      width: 50%;
-      height: 100%;
-      overflow: hidden;
-    }
-
-    .db-cover-half img {
-      width: 100%;
-      height: 100%;
       object-fit: cover;
+      object-position: center;
+      border: 3px solid #fff;
+      box-shadow: 0 8px 22px rgba(120, 70, 30, 0.28);
+      background: #f7e8d8;
+    }
+
+    .db-cover-a1 {
+      object-position: 47% 48%;
+      transform: translateY(-9%);
+      z-index: 1;
+    }
+
+    .db-cover-a2 {
+      object-position: 45% 55%;
+      margin-left: calc(clamp(64px, 8vw, 96px) * -0.32);
+      transform: translateY(9%);
+      z-index: 2;
     }
 
     .db-cover-heart {
@@ -401,15 +411,17 @@ const entries = (await getCollection("diary")).sort(
       left: 50%;
       top: 50%;
       transform: translate(-50%, -50%);
-      font-size: clamp(18px, 2.2vw, 26px);
-      color: #f6ead6;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.65);
+      font-size: clamp(16px, 1.8vw, 22px);
+      color: #e2594b;
+      z-index: 3;
+      text-shadow: 0 1px 0 #fff;
     }
 
     .db-cover-hint {
+      font-family: ui-monospace, "Cascadia Code", "JetBrains Mono", Consolas, "Courier New", monospace;
       font-size: clamp(11px, 1.2vw, 12px);
       letter-spacing: 0.4em;
-      opacity: 0.8;
+      color: #a57a55;
     }
 
     .db-flipper {
@@ -429,12 +441,12 @@ const entries = (await getCollection("diary")).sort(
     }
 
     .db-flipper.db-fwd {
-      transition: transform 0.85s cubic-bezier(0.45, 0.05, 0.25, 1);
+      transition: transform 0.72s cubic-bezier(0.45, 0.05, 0.25, 1);
       transform: rotateY(-180deg);
     }
 
     .db-flipper.db-bwd {
-      transition: transform 0.85s cubic-bezier(0.45, 0.05, 0.25, 1);
+      transition: transform 0.72s cubic-bezier(0.45, 0.05, 0.25, 1);
       transform: rotateY(0deg);
     }
 
@@ -456,7 +468,7 @@ const entries = (await getCollection("diary")).sort(
 
     .db-flipper.db-fwd .db-fp::after,
     .db-flipper.db-bwd .db-fp::after {
-      animation: db-curl 0.85s ease-in-out;
+      animation: db-curl 0.72s ease-in-out;
     }
 
     @keyframes db-curl {

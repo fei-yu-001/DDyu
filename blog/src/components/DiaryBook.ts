@@ -53,8 +53,8 @@ export function initDiaryBook() {
               <span class="db-cover-kicker">七七 &amp; 斐哥</span>
               <span class="db-cover-title">我们的故事</span>
               <span class="db-cover-duo">
-                <span class="db-cover-half"><img src="/qiqi-avatar.jpg" alt="七七" /></span>
-                <span class="db-cover-half"><img src="/feige-avatar.jpg" alt="斐哥" /></span>
+                <img class="db-cover-avatar db-cover-a1" src="/qiqi-avatar.jpg" alt="七七" />
+                <img class="db-cover-avatar db-cover-a2" src="/feige-avatar.jpg" alt="斐哥" />
                 <span class="db-cover-heart">&#9829;</span>
               </span>
               <span class="db-cover-hint">点击翻开</span>
@@ -187,6 +187,15 @@ export function initDiaryBook() {
     refresh();
   }
 
+  function setUnderlying(left: HTMLElement, right: Node[], leftNo: number, rightNo: number) {
+    spreadEl.innerHTML = "";
+    const l = pageNode("left", [left], leftNo);
+    const r = pageNode("right", right, rightNo);
+    l.addEventListener("click", () => flip(-1));
+    r.addEventListener("click", () => flip(1));
+    spreadEl.append(l, r);
+  }
+
   function flip(dir: number) {
     if (state !== "open") return;
     const target = idx + dir;
@@ -194,9 +203,23 @@ export function initDiaryBook() {
     state = "flipping";
     refresh();
 
-    // 正面 = 当前右页（翻走的那张），背面 = 目标跨页的左页（落下来的那张）
-    const front = pageNode("right db-fp", spreads[idx].blocks.map((b) => b.cloneNode(true)), idx * 2 + 2);
-    const back = pageNode("left db-fp", [spreads[target].left.cloneNode(true)], target * 2 + 1);
+    // 底层先铺好「被揭开的一侧」的新内容：页翻动的过程中新内容自然露出，
+    // 而不是翻完动画才换页（那样会看到延迟 + 跳字）。
+    // dir=1（往后翻）：右页被揭开 → 底层右页 = 目标右页；左页仍显示旧左页
+    // dir=-1（往前翻）：左页被揭开 → 底层左页 = 目标左页；右页仍显示旧右页
+    if (dir === 1) {
+      setUnderlying(spreads[idx].left, spreads[target].blocks, idx * 2 + 1, target * 2 + 2);
+    } else {
+      setUnderlying(spreads[target].left, spreads[idx].blocks, target * 2 + 1, idx * 2 + 2);
+    }
+
+    // 翻片：正面 = 落点那侧的页，背面 = 起点那侧的页
+    const frontSpread = dir === 1 ? spreads[idx] : spreads[target];
+    const backSpread = dir === 1 ? spreads[target] : spreads[idx];
+    const frontNo = (dir === 1 ? idx : target) * 2 + 2;
+    const backNo = (dir === 1 ? target : idx) * 2 + 1;
+    const front = pageNode("right db-fp", frontSpread.blocks.map((b) => b.cloneNode(true)), frontNo);
+    const back = pageNode("left db-fp", [backSpread.left.cloneNode(true)], backNo);
     flipper.innerHTML = "";
     flipper.append(front, back);
     back.classList.add("db-fp-back");
